@@ -3,7 +3,7 @@ var argscheck = require('cordova/argscheck');
 
 (function (global) {
 	var RuStore = function () {}
-	
+
 	/**
 	 * Open the app review & rating form
 	 * @param onSuccess A callback that will be called if all went ok
@@ -12,7 +12,7 @@ var argscheck = require('cordova/argscheck');
 	RuStore.prototype.openReviewForm = function (onSuccess, onError) {
 		exec(onSuccess, onError, 'RuStorePlugin', 'openReviewForm', [])
 	}
-	
+
 	/**
 	 * Initialize the billing client to access the purchases functionality
 	 * @param options A set of options containing the app config values
@@ -21,7 +21,7 @@ var argscheck = require('cordova/argscheck');
 	 */
 	RuStore.prototype.initPurchases = function (options, onSuccess, onError) {
 		argscheck.checkArgs('O', 'RuStore.initPurchases', arguments)
-		
+
 		if(!options) {
 			if(onError) {
 				onError('No options provided!')
@@ -53,7 +53,7 @@ var argscheck = require('cordova/argscheck');
 			}
 		}
 	}
-	
+
 	/**
 	 * Check if purchases are available in this app
 	 * @param onSuccess A callback that will be called if all went ok (and if the purchases are available)
@@ -62,7 +62,7 @@ var argscheck = require('cordova/argscheck');
 	RuStore.prototype.checkPurchasesAvailability = function (onSuccess, onError) {
 		exec(onSuccess, onError, 'RuStorePlugin', 'checkPurchasesAvailability', [])
 	}
-	
+
 	/**
 	 * Get all the available products that can be purchased in this app
 	 * @param onSuccess A callback that will be called if all went ok (and the products list will be accessible through here)
@@ -72,7 +72,7 @@ var argscheck = require('cordova/argscheck');
 		// TODO: argscheck?
 		exec(onSuccess, onError, 'RuStorePlugin', 'getProducts', [productIds])
 	}
-	
+
 	/**
 	 * Get all the purchases of the current app user
 	 * @param onSuccess A callback that will be called if all went ok (and the purchases list will be accessible through here)
@@ -81,7 +81,7 @@ var argscheck = require('cordova/argscheck');
 	RuStore.prototype.getPurchases = function (onSuccess, onError) {
 		exec(onSuccess, onError, 'RuStorePlugin', 'getPurchases', [])
 	}
-	
+
 	/**
 	 * Purchase the specified product
 	 * @param product A product which needs to be purchased
@@ -114,6 +114,6 @@ var argscheck = require('cordova/argscheck');
                  argscheck.checkArgs('S', 'RuStore.deletePurchase', arguments)
                  exec(onSuccess, onError, 'RuStorePlugin', 'deletePurchase', [product])
          }
-	
+
 	module.exports = new RuStore()
 })(window)

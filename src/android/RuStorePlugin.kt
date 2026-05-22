@@ -37,23 +37,23 @@ import ru.rustore.sdk.billingclient.model.purchase.response.ConfirmPurchaseRespo
 
 class RuStorePlugin : CordovaPlugin() {
   lateinit var app: Application
-  
+
   lateinit var reviewManager: RuStoreReviewManager
-  
+
   var userPurchases: List<Purchase>? = null
-  
+
   /**
   * Called when initializing the plugin
   */
   override fun pluginInitialize() {
     super.pluginInitialize()
-	
+
 	this.app = this.cordova.getActivity().getApplication()
-	
+
 	var context = this.cordova.getContext()
 	this.reviewManager = RuStoreReviewManagerFactory.create(context)
   }
-  
+
   /**
   * Called when executing an action from the JS code
   *
@@ -104,7 +104,7 @@ class RuStorePlugin : CordovaPlugin() {
 
     return false
   }
-  
+
   /**
   * Called when the activity receives a new intent
   *
@@ -114,7 +114,7 @@ class RuStorePlugin : CordovaPlugin() {
 	super.onNewIntent(intent)
 	RuStoreBillingClient.onNewIntent(intent)
   }
-  
+
   /**
   * Called to open the app review form which allows to leave a rating and a
   * comment about the app without quitting it. The user can rate the app
@@ -129,7 +129,7 @@ class RuStorePlugin : CordovaPlugin() {
 			  // Save the received review info for further interaction
 			  // NOTE: the review info has a lifespan of ~5 mins
 			  val reviewInfo = result
-			  
+
 			  // Actually open the review and rating form
 			  // NOTE: after the interaction with the review form is complete it's not recommended to display any other forms related to review or rating, no matter which the result (either onSuccess or onFailure)
 			  // NOTE: the frequent calls to launchReviewFlow won't actually display the form with the same frequency as that is controlled on the RuStore side
@@ -138,21 +138,21 @@ class RuStorePlugin : CordovaPlugin() {
 					  // Review flow has finished, continue the app flow
 					  callbackContext.success()
 				  }
-				  
+
 				  override fun onFailure(throwable: Throwable) {
 					  // Review flow has finished, continue the app flow
 					  callbackContext.error("Failed to open the review form! (" + throwable.toString() + ")")
 				  }
 			  })
 		  }
-		  
+
 		  override fun onFailure(throwable: Throwable) {
 			  // NOTE: it is not recommended to display an error to the user here as he's not the one who launched the process
 			  callbackContext.error("Failed to open the review form! (" + throwable.toString() + ")")
 		  }
 	  })
   }
-  
+
   /**
   * Called to initialize the billing client
   *
@@ -161,7 +161,7 @@ class RuStorePlugin : CordovaPlugin() {
   */
   private fun initBillingClient(args: JSONArray, callbackContext: CallbackContext) { // TODO: initSdk? initPurchases?
 	val options = args.getJSONObject(0)
-	
+
 	RuStoreBillingClient.init(
 		application = this.app,
 		consoleApplicationId = options.getString("consoleApplicationId"),
@@ -169,7 +169,7 @@ class RuStorePlugin : CordovaPlugin() {
 	)
 	callbackContext.success()
   }
-  
+
   /**
   * Called to check if purchases are available for the user
   *
@@ -188,17 +188,17 @@ class RuStorePlugin : CordovaPlugin() {
 				  }
 			  }
 		  }
-		  
+
 		  override fun onFailure(throwable: Throwable) {
 			  callbackContext.error("Purchases availability check failed! (" + throwable.toString() + ")")
 		  }
 	  })
   }
-  
+
   /**
   */
   // TODO: private fun isBillingClientInitialized(args: JSONArray, callbackContext: CallbackContext)?
-  
+
   /**
   * Called to get the list of app's products
   *
@@ -207,27 +207,27 @@ class RuStorePlugin : CordovaPlugin() {
   */
   private fun getProducts(args: JSONArray, callbackContext: CallbackContext) {
 	  // TODO: check if initialized?
-	  
+
 	  val productsArray = args.getJSONArray(0)
 	  val productIds = List<String>(productsArray.length()) {
 		productsArray.getString(it)
 	  }
-	  
+
 	  RuStoreBillingClient.products.getProducts(productIds)
 	  .addOnCompleteListener(object: OnCompleteListener<ProductsResponse> {
 		  override fun onSuccess(result: ProductsResponse) {
 			if(result.products == null) {
 				callbackContext.error("Failed to load the products list!" + (if (result.errorMessage != null) " (Code ${result.code} : ${result.errorMessage}" + (if (result.errorDescription != null) " - ${result.errorDescription}" else "") + ")" else ""))
 			}
-			
+
 			var products = JSONArray()
-			
+
 			// TODO: products can be null?
 			result.products?.forEach {
 				val product = JSONObject()
-				
+
 				product.put("productId", it.productId)
-				
+
 				it.productType?.let {
 					// Possible types:
 					// CONSUMABLE - can be purchased multiple times, represents things like crystals, for example
@@ -240,48 +240,48 @@ class RuStorePlugin : CordovaPlugin() {
 					}
 					product.put("productType", type)
 				}
-				
+
 				val status = when(it.productStatus) {
 					ProductStatus.ACTIVE -> "ACTIVE"
 					ProductStatus.INACTIVE -> "INACTIVE"
 				}
 				product.put("productStatus", status)
-				
+
 				it.priceLabel?.let {
 					product.put("priceLabel", it)
 				}
-				
+
 				it.price?.let {
 					product.put("price", it)
 				}
-				
+
 				it.currency?.let {
 					product.put("currency", it)
 				}
-				
+
 				it.language?.let {
 					product.put("language", it)
 				}
-				
+
 				it.title?.let {
 					product.put("title", it)
 				}
-				
+
 				it.description?.let {
 					product.put("description", it)
 				}
-				
+
 				it.imageUrl?.let {
 					product.put("imageUrl", it.toString())
 				}
-				
+
 				it.promoImageUrl?.let {
 					product.put("promoImageUrl", it.toString())
 				}
-				
+
 				it.subscription?.let {
 					val sub = JSONObject()
-					
+
 					it.subscriptionPeriod?.let {
 						val period = JSONObject()
 						period.put("years", it.years)
@@ -289,7 +289,7 @@ class RuStorePlugin : CordovaPlugin() {
 						period.put("days", it.days)
 						sub.put("subscriptionPeriod", period)
 					}
-					
+
 					it.freeTrialPeriod?.let {
 						val period = JSONObject()
 						period.put("years", it.years)
@@ -297,7 +297,7 @@ class RuStorePlugin : CordovaPlugin() {
 						period.put("days", it.days)
 						sub.put("freeTrialPeriod", period)
 					}
-					
+
 					it.gracePeriod?.let {
 						val period = JSONObject()
 						period.put("years", it.years)
@@ -305,15 +305,15 @@ class RuStorePlugin : CordovaPlugin() {
 						period.put("days", it.days)
 						sub.put("gracePeriod", period)
 					}
-					
+
 					it.introductoryPrice?.let {
 						sub.put("introductoryPrice", it)
 					}
-					
+
 					it.introductoryPriceAmount?.let {
 						sub.put("introductoryPriceAmount", it)
 					}
-					
+
 					it.introductoryPricePeriod?.let {
 						val period = JSONObject()
 						period.put("years", it.years)
@@ -321,21 +321,21 @@ class RuStorePlugin : CordovaPlugin() {
 						period.put("days", it.days)
 						sub.put("introductoryPricePeriod", period)
 					}
-					
+
 					product.put("subscription", sub)
 				}
-				
+
 				products.put(product)
 			}
 			callbackContext.success(products)
 		  }
-		  
+
 		  override fun onFailure(throwable: Throwable) {
 			  callbackContext.error("Failed to get the products! (" + throwable.toString() + ")")
 		  }
 	  })
   }
-  
+
   /**
   * Called to get the list of app's purchases
   *
@@ -344,20 +344,20 @@ class RuStorePlugin : CordovaPlugin() {
   */
   private fun getPurchases(args: JSONArray, callbackContext: CallbackContext) {
 	// TODO: check if initialized?
-	
+
 	RuStoreBillingClient.purchases.getPurchases()
 	.addOnCompleteListener(object: OnCompleteListener<PurchasesResponse> {
 		override fun onSuccess(result: PurchasesResponse) {
 			if(result.purchases == null) {
 				callbackContext.error("Failed to load the purchases list!" + (if (result.errorMessage != null) " (Code ${result.code} : ${result.errorMessage}" + (if (result.errorDescription != null) " - ${result.errorDescription}" else "") + ")" else ""))
 			}
-			
+
 			userPurchases = result.purchases
-			
+
 			var purchases = JSONArray()
-			
+
 			// TODO: purchases can be null here
-			
+
 			//result.purchases?.let {
 				result.purchases?.forEach {
 				//for (it in result.purchases) {
@@ -374,15 +374,15 @@ class RuStorePlugin : CordovaPlugin() {
 							else -> Unit
 						}
 					}
-					
+
 					val purchase = JSONObject()
-					
+
 					it.purchaseId?.let {
 						purchase.put("purchaseId", it)
 					}
-					
+
 					purchase.put("productId", it.productId)
-					
+
 					it.productType?.let {
 						// Possible types:
 						// CONSUMABLE - can be purchased multiple times, represents things like crystals, for example
@@ -395,43 +395,43 @@ class RuStorePlugin : CordovaPlugin() {
 						}
 						purchase.put("productType", type)
 					}
-					
+
 					it.invoiceId?.let {
 						purchase.put("invoiceId", it)
 					}
-					
+
 					it.description?.let {
 						purchase.put("description", it)
 					}
-					
+
 					it.language?.let {
 						purchase.put("language", it)
 					}
-					
+
 					it.purchaseTime?.let {
 						purchase.put("purchaseTime", it.toString()) // TODO: it.toUTCString()/toJSON()/toDateString()?
 					}
-					
+
 					it.orderId?.let {
 						purchase.put("orderId", it)
 					}
-					
+
 					it.amountLabel?.let {
 						purchase.put("amountLabel", it)
 					}
-					
+
 					it.amount?.let {
 						purchase.put("amount", it)
 					}
-					
+
 					it.currency?.let {
 						purchase.put("currency", it)
 					}
-					
+
 					it.quantity?.let {
 						purchase.put("quantity", it)
 					}
-					
+
 					it.purchaseState?.let {
 						val state = when(it) {
 							PurchaseState.CREATED -> "CREATED"
@@ -445,28 +445,28 @@ class RuStorePlugin : CordovaPlugin() {
 						}
 						purchase.put("purchaseState", state)
 					}
-					
+
 					it.developerPayload?.let {
 						purchase.put("developerPayload", it)
 					}
-					
+
 					it.subscriptionToken?.let {
 						purchase.put("subscriptionToken", it)
 					}
-					
+
 					purchases.put(purchase)
 				}
 				callbackContext.success(purchases)
 			//}
 		}
-		
+
 		override fun onFailure(throwable: Throwable) {
 			userPurchases = null
 			callbackContext.error("Failed to get the purchases! (" + throwable.toString() + ")")
 		}
 	})
   }
-  
+
   /**
   * Called to make a purchase
   *
@@ -475,18 +475,18 @@ class RuStorePlugin : CordovaPlugin() {
   */
   private fun purchaseProduct(args: JSONArray, callbackContext: CallbackContext) {
 	// TODO: check if initialized?
-	
+
 	val data = args.getJSONObject(0)
-	
+
 	val productId = data.getString("productId")
-	
+
 	if(productId.isEmpty())
 		callbackContext.error("Empty product ID provided!")
-	
+
 	val orderId = if (data.has("orderId")) data.getString("orderId") else null
 	val quantity = if (data.has("quantity")) data.getInt("quantity") else 1
 	val developerPayload = if (data.has("developerPayload")) data.getString("developerPayload") else null
-	
+
 	RuStoreBillingClient.purchases.purchaseProduct(productId, orderId, quantity, developerPayload)
 	.addOnCompleteListener(object: OnCompleteListener<PaymentResult> {
 		override fun onSuccess(result: PaymentResult) {
@@ -495,12 +495,12 @@ class RuStorePlugin : CordovaPlugin() {
 				// The purchase have not been completed
 				is PaymentResult.InvoiceResult -> {
 					var success = false
-					
+
 					response.put("invoiceId", result.invoiceId)
-					
+
 					/*
 					Possible values of the finishCode:
-					
+
 					SUCCESSFUL_PAYMENT — sucessful payment
 					CLOSED_BY_USER — cancelled by user
 					UNHANDLED_FORM_ERROR — unknown error
@@ -529,13 +529,13 @@ class RuStorePlugin : CordovaPlugin() {
 							response.put("finishCode", "RESULT_UNKNOWN")
 						}
 					}
-					
+
 					if(success)
 						callbackContext.success(response)
 					else
 						callbackContext.error(response)
 				}
-				
+
 				// The purchase have been completed without the invoice specified (probably they were launched with incorrect one, like an empty string)
 				is PaymentResult.InvalidInvoice -> {
 					var message = "Failed to purchase the product - invalid invoice provided!"
@@ -543,14 +543,14 @@ class RuStorePlugin : CordovaPlugin() {
 						message.plus(" (${result.invoiceId})")
 					callbackContext.error(message)
 				}
-				
+
 				// The purchase have been completed with some result
 				is PaymentResult.PurchaseResult -> {
 					var success = false
-					
+
 					/*
 					Possible values of the finishCode:
-					
+
 					SUCCESSFUL_PAYMENT — sucessful payment
 					CLOSED_BY_USER — cancelled by user
 					UNHANDLED_FORM_ERROR — unknown error
@@ -586,64 +586,64 @@ class RuStorePlugin : CordovaPlugin() {
 							RuStoreBillingClient.purchases.deletePurchase(result.purchaseId)
 						}
 					}
-					
+
 					response.put("orderId", result.orderId)
 					response.put("purchaseId", result.purchaseId)
 					response.put("productId", result.productId)
-					
+
 					result.subscriptionToken?.let {
 						response.put("subscriptionToken", it)
 					}
-					
+
 					if(success)
 						callbackContext.success(response)
 					else
 						callbackContext.error(response)
 				}
-				
+
 				// An error happened during the purchase
 				is PaymentResult.InvalidPurchase -> {
 					result.purchaseId?.let {
 						response.put("purchaseId", it)
 						RuStoreBillingClient.purchases.deletePurchase(it)
 					}
-					
+
 					result.invoiceId?.let {
 						response.put("invoiceId", it)
 					}
-					
+
 					result.orderId?.let {
 						response.put("orderId", it)
 					}
-					
+
 					result.quantity?.let {
 						response.put("quantity", it)
 					}
-					
+
 					result.productId?.let {
 						response.put("productId", it)
 					}
-					
+
 					result.errorCode?.let {
 						response.put("errorCode", it)
 					}
-					
+
 					callbackContext.error(response)
 				}
-				
+
 				// No payment state received during the payment
 				is PaymentResult.InvalidPaymentState -> {
 					callbackContext.error("Failed to purchase the product - No payment state received during the payment process!")
 				}
 			}
 		}
-		
+
 		override fun onFailure(throwable: Throwable) {
 			callbackContext.error("Failed to purchase the product! (" + throwable.toString() + ")")
 		}
 	})
   }
-  
+
   /**
   * Called to delete the specified purchase
   *
@@ -652,44 +652,44 @@ class RuStorePlugin : CordovaPlugin() {
   */
   private fun deletePurchase(args: JSONArray, callbackContext: CallbackContext) {
 	// TODO: check if initialized?
-	
+
 	val purchaseId = args.getString(0)
-	
+
 	if(purchaseId.isEmpty())
 		callbackContext.error("Empty purchase ID provided!")
-	
+
 	RuStoreBillingClient.purchases.deletePurchase(purchaseId)
 	.addOnCompleteListener(object: OnCompleteListener<DeletePurchaseResponse> {
 		override fun onSuccess(result: DeletePurchaseResponse) {
 			val response = JSONObject()
-			
+
 			result.meta?.let {
 				val meta = JSONObject()
 				meta.put("traceId", it.traceId)
 				response.put("meta", meta)
 			}
-			
+
 			response.put("code", result.code)
-			
+
 			result.errorMessage?.let {
 				response.put("errorMessage", it)
 			}
-			
+
 			result.errorDescription?.let {
 				response.put("errorDescription", it)
 			}
-			
+
 			// TODO: errors field support?
-			
+
 			callbackContext.success(response)
 		}
-		
+
 		override fun onFailure(throwable: Throwable) {
 			callbackContext.error("Failed to delete/cancel the purchase! (" + throwable.toString() + ")")
 		}
 	})
   }
-  
+
   /**
   * Called to confirm the specified purchase
   *
@@ -698,39 +698,39 @@ class RuStorePlugin : CordovaPlugin() {
   */
   private fun confirmPurchase(args: JSONArray, callbackContext: CallbackContext) {
 	// TODO: check if initialized?
-	
+
 	val purchaseId = args.getString(0)
 	val developerPayload = if (args.isNull(1)) null else args.getString(1)
-	
+
 	if(purchaseId.isEmpty())
 		callbackContext.error("Empty purchase ID provided!")
-	
+
 	RuStoreBillingClient.purchases.confirmPurchase(purchaseId, developerPayload)
 	.addOnCompleteListener(object: OnCompleteListener<ConfirmPurchaseResponse> {
 		override fun onSuccess(result: ConfirmPurchaseResponse) {
 			val response = JSONObject()
-			
+
 			result.meta?.let {
 				val meta = JSONObject()
 				meta.put("traceId", it.traceId)
 				response.put("meta", meta)
 			}
-			
+
 			response.put("code", result.code)
-			
+
 			result.errorMessage?.let {
 				response.put("errorMessage", it)
 			}
-			
+
 			result.errorDescription?.let {
 				response.put("errorDescription", it)
 			}
-			
+
 			// TODO: errors field support?
-			
+
 			callbackContext.success(response)
 		}
-		
+
 		override fun onFailure(throwable: Throwable) {
 			callbackContext.error("Failed to confirm/consume the purchase! (" + throwable.toString() + ")")
 		}
